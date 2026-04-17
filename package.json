@@ -1,0 +1,26 @@
+{
+  "name": "manoma",
+  "version": "1.0.0",
+  "description": "soul.md — an open format for your AI identity. Manoma is the MCP server that makes any LLM read it. User-owned, git-versioned, vendor-neutral.",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build:web": "npm --prefix web run build",
+    "build:mcp": "npm --prefix mcp run build",
+    "test": "npm --prefix mcp run test"
+  },
+  "keywords": [
+    "soul.md",
+    "ai",
+    "llm",
+    "identity",
+    "mcp",
+    "model-context-protocol",
+    "portable-identity",
+    "claude",
+    "cursor",
+    "zed"
+  ],
+  "author": "paperdavid",
+  "license": "MIT"
+}

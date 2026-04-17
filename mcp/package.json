@@ -1,0 +1,44 @@
+{
+  "name": "manoma-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for soul.md — your portable AI identity layer",
+  "mcpName": "io.github.paperdavid/manoma",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "manoma-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc && cp src/parser.js src/injector.js dist/ && chmod 755 dist/index.js",
+    "clean": "rm -rf dist",
+    "test": "node src/parser.test.js && npx tsx test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paperdavid/manoma.git",
+    "directory": "mcp"
+  },
+  "homepage": "https://github.com/paperdavid/manoma#readme",
+  "bugs": "https://github.com/paperdavid/manoma/issues",
+  "keywords": ["soul.md", "mcp", "model-context-protocol", "ai", "identity", "llm", "portable-identity", "claude", "cursor"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

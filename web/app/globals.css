@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+/* Use @theme inline so utilities resolve vars at element scope */
+@theme inline {
+  --color-fg: var(--fg);
+  --color-bg: var(--bg);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-on-accent: var(--on-accent);
+}
+
+:root {
+  --bg: var(--color-mist-100);
+  --fg: var(--color-mist-950);
+  --muted: var(--color-mist-500);
+  --border: var(--color-mist-300);
+  --accent: var(--color-mist-950);
+  --surface: var(--color-mist-50);
+  --surface-elevated: var(--color-mist-100);
+  --on-accent: var(--color-white);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Inter", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  line-height: 1.6;
+}
+
+.font-heading {
+  font-family: "Instrument Serif", Georgia, serif;
+}
+
+/* Onboarding progress bar */
+.progress-track {
+  background: var(--border);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: var(--accent);
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+input[type="range"].range-accent {
+  accent-color: var(--accent);
+}
