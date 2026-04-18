@@ -6,10 +6,11 @@
  * the rest of the document.
  */
 
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
 import { homedir } from "node:os";
+import { STARTER_TEMPLATE } from "./template.js";
 
 const TIMESTAMP_FORMAT: Intl.DateTimeFormatOptions = {
   year: "numeric",
@@ -30,6 +31,31 @@ export function resolveSoulPath(): string {
   if (existsSync(localPath)) return localPath;
 
   return resolve(homedir(), "soul.md");
+}
+
+export interface EnsureResult {
+  path: string;
+  bootstrapped: boolean;
+}
+
+/**
+ * Ensure soul.md exists at the given path. If missing, write the starter
+ * template. Returns whether bootstrapping occurred so the server can surface
+ * a first-run welcome message.
+ *
+ * Creates parent directories if needed. If the file already exists it's left
+ * completely untouched — we never overwrite user content.
+ */
+export async function ensureSoulFile(path: string): Promise<EnsureResult> {
+  if (existsSync(path)) return { path, bootstrapped: false };
+
+  const parent = dirname(path);
+  if (!existsSync(parent)) {
+    await mkdir(parent, { recursive: true });
+  }
+
+  await writeFile(path, STARTER_TEMPLATE, "utf-8");
+  return { path, bootstrapped: true };
 }
 
 /**

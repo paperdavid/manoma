@@ -20,11 +20,13 @@ import { parseSoulFromString, type ParsedSoul, type Section } from "./parser.js"
 import { buildInjection, type InjectionResult } from "./injector.js";
 import {
   resolveSoulPath,
+  ensureSoulFile,
   readSoulFile,
   writeSoulFile,
   appendToSection,
   replaceSection,
 } from "./file-ops.js";
+import { welcomeMessage } from "./template.js";
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 // ---------------------------------------------------------------------------
@@ -34,9 +36,34 @@ import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 let soulPath: string;
 let soulDoc: ParsedSoul;
 
+/**
+ * Set when soul.md is auto-bootstrapped on first run. Prepended to the first
+ * tool response so the LLM can deliver onboarding conversationally, then
+ * cleared — welcome only fires once per server process.
+ */
+let pendingWelcome: string | null = null;
+
 async function reload(): Promise<void> {
   const raw = await readSoulFile(soulPath);
   soulDoc = parseSoulFromString(raw);
+}
+
+/**
+ * Build a text tool response, prepending the one-shot welcome message if a
+ * bootstrap happened earlier this process. All tool handlers route through
+ * this so the welcome surfaces on whichever tool the LLM happens to call first.
+ */
+function textResponse(text: string) {
+  if (pendingWelcome) {
+    const welcome = pendingWelcome;
+    pendingWelcome = null;
+    return {
+      content: [{ type: "text" as const, text: welcome + text }],
+    };
+  }
+  return {
+    content: [{ type: "text" as const, text }],
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -120,7 +147,7 @@ function formatSection(section: Section): string {
 
 const server = new McpServer({
   name: "manoma-mcp",
-  version: "0.1.0",
+  version: "0.2.0",
 });
 
 // ---------------------------------------------------------------------------
@@ -256,21 +283,14 @@ Returns:
         ? Object.keys(soulDoc.config.mode_routing).join(", ")
         : "none configured";
 
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: `No sections found for mode "${mode}". Available modes: ${availableModes}`,
-          },
-        ],
-      };
+      return textResponse(
+        `No sections found for mode "${mode}". Available modes: ${availableModes}`
+      );
     }
 
     const text = sections.map(formatSection).join("\n\n---\n\n");
 
-    return {
-      content: [{ type: "text" as const, text: `# Context: ${mode} mode\n\n${text}` }],
-    };
+    return textResponse(`# Context: ${mode} mode\n\n${text}`);
   }
 );
 
@@ -350,9 +370,7 @@ Returns:
 
     metaLines.push("", "---", "", injection.text);
 
-    return {
-      content: [{ type: "text" as const, text: metaLines.join("\n") }],
-    };
+    return textResponse(metaLines.join("\n"));
   }
 );
 
@@ -417,22 +435,15 @@ Returns:
       // Return the summary instead
       const summary = soulDoc.sections["skills.summary"] ?? soulDoc.sections["skills"];
 
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: summary
-              ? `No detailed section found for "${params.skill}". Here's the skills summary:\n\n${formatSection(summary)}`
-              : `No skill information found for "${params.skill}".`,
-          },
-        ],
-      };
+      return textResponse(
+        summary
+          ? `No detailed section found for "${params.skill}". Here's the skills summary:\n\n${formatSection(summary)}`
+          : `No skill information found for "${params.skill}".`
+      );
     }
 
     const text = matches.map(formatSection).join("\n\n---\n\n");
-    return {
-      content: [{ type: "text" as const, text }],
-    };
+    return textResponse(text);
   }
 );
 
@@ -490,9 +501,7 @@ metadata, and child sections. Useful for discovering what's in the soul.`,
       }
     }
 
-    return {
-      content: [{ type: "text" as const, text: lines.join("\n") }],
-    };
+    return textResponse(lines.join("\n"));
   }
 );
 
@@ -550,14 +559,7 @@ Returns:
     await writeSoulFile(soulPath, updated);
     await reload();
 
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: `Decision recorded in /memory/decisions:\n\n> ${entry}`,
-        },
-      ],
-    };
+    return textResponse(`Decision recorded in /memory/decisions:\n\n> ${entry}`);
   }
 );
 
@@ -616,14 +618,7 @@ Returns:
     await writeSoulFile(soulPath, updated);
     await reload();
 
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: `Lesson recorded in /memory/lessons:\n\n> ${entry}`,
-        },
-      ],
-    };
+    return textResponse(`Lesson recorded in /memory/lessons:\n\n> ${entry}`);
   }
 );
 
@@ -671,14 +666,7 @@ Returns:
     await writeSoulFile(soulPath, updated);
     await reload();
 
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: `/now section updated:\n\n${params.content}`,
-        },
-      ],
-    };
+    return textResponse(`/now section updated:\n\n${params.content}`);
   }
 );
 
@@ -689,12 +677,31 @@ Returns:
 async function main(): Promise<void> {
   soulPath = resolveSoulPath();
 
+  // Auto-bootstrap a starter template if no soul.md exists yet. Sets a
+  // pendingWelcome that surfaces on the first tool call so new users see
+  // onboarding conversationally instead of hitting an unfriendly error.
+  let bootstrapped = false;
+  try {
+    const result = await ensureSoulFile(soulPath);
+    bootstrapped = result.bootstrapped;
+    if (bootstrapped) {
+      pendingWelcome = welcomeMessage(soulPath);
+    }
+  } catch (err) {
+    console.error(
+      `Error: Could not create soul.md at ${soulPath}\n` +
+        `Check that the path is writable, or set SOUL_MD_PATH to a different location.\n\n` +
+        `${err instanceof Error ? err.message : String(err)}`
+    );
+    process.exit(1);
+  }
+
   try {
     await reload();
   } catch (err) {
     console.error(
       `Error: Could not load soul.md from ${soulPath}\n` +
-        `Make sure the file exists or set SOUL_MD_PATH.\n\n` +
+        `Make sure the file is readable and valid soul.md format.\n\n` +
         `${err instanceof Error ? err.message : String(err)}`
     );
     process.exit(1);
@@ -705,6 +712,10 @@ async function main(): Promise<void> {
     ? Object.keys(soulDoc.config.mode_routing).join(", ")
     : "none";
 
+  const statusLine = bootstrapped
+    ? `Created starter: ${soulPath}`
+    : `Loaded: ${soulPath}`;
+
   console.error(`
   ███╗   ███╗ █████╗ ███╗   ██╗ ██████╗ ███╗   ███╗ █████╗
   ████╗ ████║██╔══██╗████╗  ██║██╔═══██╗████╗ ████║██╔══██╗
@@ -713,8 +724,8 @@ async function main(): Promise<void> {
   ██║ ╚═╝ ██║██║  ██║██║ ╚████║╚██████╔╝██║ ╚═╝ ██║██║  ██║
   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝
 
-  manoma-mcp v0.1.0
-  Loaded: ${soulPath}
+  manoma-mcp v0.2.0
+  ${statusLine}
   Sections: ${sectionCount} | Modes: ${modes}
   Transport: stdio
 `);

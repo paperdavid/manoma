@@ -48,11 +48,7 @@ npx manoma-mcp
 
 ## Quick Start
 
-### 1. Create your soul.md
-
-Place a `soul.md` in your home directory (`~/soul.md`). See the [soul.md format spec](https://github.com/paperdavid/manoma) for the full format.
-
-### 2. Add to your MCP client
+### 1. Add to your MCP client
 
 **Claude Desktop** — edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -95,6 +91,12 @@ Place a `soul.md` in your home directory (`~/soul.md`). See the [soul.md format 
   }
 }
 ```
+
+### 2. That's it
+
+On first run, the server auto-creates a starter `soul.md` at `~/soul.md` with placeholders for `/identity`, `/values`, `/voice`, `/skills`, and more. The LLM delivers a one-time welcome message telling you what just happened.
+
+Open `~/soul.md` in your editor and fill in the placeholders — start with `/identity` and `/values`, flesh out the rest as it feels useful. Or just ask the AI: *"help me fill in my soul.md"*.
 
 ### 3. Talk to the AI
 
@@ -154,6 +156,8 @@ The server looks for soul.md in this order:
 1. `SOUL_MD_PATH` environment variable
 2. `./soul.md` (current directory)
 3. `~/soul.md` (home directory)
+
+**Auto-bootstrap:** if the resolved path has no file, the server writes a starter template there on first run (with parent directories created as needed). You can always delete the file and let it recreate, or hand-edit freely — the server never overwrites an existing soul.md.
 
 ---
 
