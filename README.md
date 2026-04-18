@@ -5,7 +5,7 @@
 `soul.md` is an open format for your AI identity — values, voice, skills, taste. A plaintext file you own, version in git, and carry between tools. **Manoma** is the reference MCP server that makes any LLM read your soul.md.
 
 - **User-owned** — lives on your machine, in your repo. No cloud, no account, no vendor.
-- **Portable** — works with Claude Desktop, Cursor, Zed, and any MCP-aware client.
+- **Portable** — works with Claude Desktop, Cursor, Zenflow, and any MCP-aware client.
 - **Built to outlive models** — git-diffable, forkable, versioned. A format, not a walled garden.
 
 See the [soul.md format specification](SPEC.md).
@@ -14,7 +14,7 @@ See the [soul.md format specification](SPEC.md).
 
 ## Install
 
-One line in your Claude Desktop, Cursor, or Zed config:
+One line in your Claude Desktop, Cursor, or Zenflow config:
 
 ```json
 {
@@ -31,7 +31,7 @@ Then drop your soul.md at `~/soul.md`.
 
 ### Get a soul.md
 
-- **Web builder** — [manoma.com/build](https://manoma.com/build) — fill the form, download the file.
+- **Web builder** — [manoma.ai/build](https://manoma.ai/build) — fill the form, download the file.
 - **Template** — `cp templates/founder.md ~/soul.md` (also: `engineer.md`, `designer.md`, `pm.md`).
 
 ---
@@ -58,7 +58,7 @@ manoma/
 └── README.md
 ```
 
-The manoma.com site lives in its own repo: [paperdavid/persona](https://github.com/paperdavid/persona).
+The manoma.ai site lives in its own repo: [paperdavid/persona](https://github.com/paperdavid/persona).
 
 ---
 
