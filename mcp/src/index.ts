@@ -120,7 +120,7 @@ function formatSection(section: Section): string {
 
 const server = new McpServer({
   name: "manoma-mcp",
-  version: "1.0.0",
+  version: "0.1.0",
 });
 
 // ---------------------------------------------------------------------------
@@ -713,7 +713,7 @@ async function main(): Promise<void> {
   ██║ ╚═╝ ██║██║  ██║██║ ╚████║╚██████╔╝██║ ╚═╝ ██║██║  ██║
   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝
 
-  manoma-mcp v1.0.0
+  manoma-mcp v0.1.0
   Loaded: ${soulPath}
   Sections: ${sectionCount} | Modes: ${modes}
   Transport: stdio
