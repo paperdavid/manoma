@@ -58,8 +58,6 @@ manoma/
 └── README.md
 ```
 
-The manoma.ai site lives in its own repo: [paperdavid/persona](https://github.com/paperdavid/persona).
-
 ---
 
 ## Philosophy
