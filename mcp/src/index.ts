@@ -134,6 +134,43 @@ function resolveModeContext(mode: string): Section[] {
   return resolved;
 }
 
+/**
+ * Detect whether /now looks stale based on the latest date literal inside it.
+ *
+ * /now is marked `stability=volatile` in the starter template, meaning it's
+ * expected to change often. When it hasn't been touched in a while, returning
+ * get_context would silently serve stale priorities. We scan for any
+ * YYYY-MM-DD date in the section content and return a short hint if the
+ * newest one is older than NOW_STALE_DAYS.
+ *
+ * Returns null when /now has no dates or is still fresh.
+ */
+const NOW_STALE_DAYS = 14;
+
+function nowStalenessHint(nowContent: string | undefined): string | null {
+  if (!nowContent) return null;
+
+  const matches = [...nowContent.matchAll(/\b(20\d{2})-(\d{2})-(\d{2})\b/g)];
+  if (matches.length === 0) return null;
+
+  let latestMs = 0;
+  let latestStr = "";
+  for (const m of matches) {
+    const iso = `${m[1]}-${m[2]}-${m[3]}`;
+    const ms = Date.parse(iso);
+    if (!Number.isNaN(ms) && ms > latestMs) {
+      latestMs = ms;
+      latestStr = iso;
+    }
+  }
+  if (latestMs === 0) return null;
+
+  const daysOld = Math.floor((Date.now() - latestMs) / 86400000);
+  if (daysOld < NOW_STALE_DAYS) return null;
+
+  return `> _/now last dated ${latestStr} (${daysOld} days ago) — may be stale. Call \`update_now\` to refresh._`;
+}
+
 function formatSection(section: Section): string {
   // section.content already includes the heading line
   // (e.g. "## /identity\n<!-- meta: ... -->\n\ncontent...")
@@ -147,7 +184,7 @@ function formatSection(section: Section): string {
 
 const server = new McpServer({
   name: "manoma-mcp",
-  version: "0.2.0",
+  version: "0.2.1",
 });
 
 // ---------------------------------------------------------------------------
@@ -290,7 +327,14 @@ Returns:
 
     const text = sections.map(formatSection).join("\n\n---\n\n");
 
-    return textResponse(`# Context: ${mode} mode\n\n${text}`);
+    // Surface a hint if /now looks stale. Only runs when /now was included by
+    // mode_routing; we look at the raw soulDoc entry rather than the resolved
+    // list so we don't force the section into a mode that excludes it.
+    const hint = nowStalenessHint(soulDoc.sections.now?.content);
+    const includesNow = sections.some((s) => s.id === "now");
+    const prefix = hint && includesNow ? `${hint}\n\n` : "";
+
+    return textResponse(`# Context: ${mode} mode\n\n${prefix}${text}`);
   }
 );
 
@@ -724,7 +768,7 @@ async function main(): Promise<void> {
   ██║ ╚═╝ ██║██║  ██║██║ ╚████║╚██████╔╝██║ ╚═╝ ██║██║  ██║
   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝
 
-  manoma-mcp v0.2.0
+  manoma-mcp v0.2.1
   ${statusLine}
   Sections: ${sectionCount} | Modes: ${modes}
   Transport: stdio

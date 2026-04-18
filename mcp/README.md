@@ -161,6 +161,36 @@ The server looks for soul.md in this order:
 
 ---
 
+## Storage & sync
+
+Your soul.md is a single plain-text file. How you store it is up to you — a few patterns that work well:
+
+**Private git repo** (recommended)
+Keep soul.md in a private repo and symlink it to `~/soul.md`:
+
+```bash
+git clone git@github.com:you/soul.git ~/code/soul
+ln -s ~/code/soul/soul.md ~/soul.md
+```
+
+You get version history, diffs when the AI writes back, and sync across machines with `git pull`. Commit after the AI adds decisions or lessons and you'll see how your identity evolves.
+
+**Cloud-synced folder**
+Drop soul.md in iCloud Drive, Dropbox, or Google Drive and point `SOUL_MD_PATH` at it:
+
+```json
+"env": { "SOUL_MD_PATH": "/Users/you/Library/Mobile Documents/com~apple~CloudDocs/soul.md" }
+```
+
+Zero effort, works across all your devices, no git. Trade-off: no history unless the provider versions it.
+
+**Local only**
+Default `~/soul.md` is fine if you only use one machine. Back it up however you back up the rest of your home directory.
+
+**Don't put it in a public repo.** soul.md contains your values, decisions, and personal context. Treat it like a journal.
+
+---
+
 ## Development
 
 ```bash
